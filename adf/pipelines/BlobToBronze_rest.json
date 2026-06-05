@@ -1,0 +1,71 @@
+{
+  "properties": {
+    "description": "Copies raw documents from tenant drop zone to bronze zone partitioned by tenant and date. Bronze is immutable — existing files are never overwritten.",
+    "parameters": {
+      "tenant_id": {
+        "type": "string"
+      },
+      "run_date": {
+        "type": "string",
+        "defaultValue": "@formatDateTime(utcnow(), 'yyyy-MM-dd')"
+      }
+    },
+    "activities": [
+      {
+        "name": "CopyDocumentsToBronze",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+          "source": {
+            "type": "BinarySource",
+            "storeSettings": {
+              "type": "AzureBlobStorageReadSettings",
+              "recursive": false
+            }
+          },
+          "sink": {
+            "type": "BinarySink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "PreserveHierarchy"
+            }
+          },
+          "enableStaging": false,
+          "parallelCopies": 4,
+          "dataIntegrationUnits": 4
+        },
+        "inputs": [
+          {
+            "referenceName": "LS_BlobSource",
+            "type": "LinkedServiceReference",
+            "parameters": {
+              "container": "incoming",
+              "folderPath": {
+                "value": "@pipeline().parameters.tenant_id",
+                "type": "Expression"
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "LS_ADLS_Gen2",
+            "type": "LinkedServiceReference",
+            "parameters": {
+              "fileSystem": "bronze",
+              "folderPath": {
+                "value": "@concat(pipeline().parameters.tenant_id, '/', pipeline().parameters.run_date)",
+                "type": "Expression"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

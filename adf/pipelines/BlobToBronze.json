@@ -1,0 +1,91 @@
+{
+  "name": "BlobToBronze",
+  "properties": {
+    "description": "Copies raw documents from tenant drop zone to bronze zone partitioned by tenant and date. Bronze is immutable — existing files are never overwritten.",
+    "parameters": {
+      "tenant_id": {
+        "type": "string"
+      },
+      "run_date": {
+        "type": "string",
+        "defaultValue": {
+          "value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+          "type": "Expression"
+        }
+      }
+    },
+    "activities": [
+      {
+        "name": "CopyDocumentsToBronze",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "BinarySource",
+            "storeSettings": {
+              "type": "AzureBlobStorageReadSettings",
+              "recursive": false,
+              "enablePartitionDiscovery": false
+            }
+          },
+          "sink": {
+            "type": "BinarySink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings",
+              "copyBehavior": "PreserveHierarchy"
+            }
+          },
+          "enableStaging": false,
+          "parallelCopies": 4,
+          "dataIntegrationUnits": 4
+        },
+        "inputs": [
+          {
+            "type": "Binary",
+            "linkedServiceName": {
+              "referenceName": "LS_BlobSource",
+              "type": "LinkedServiceReference"
+            },
+            "typeProperties": {
+              "location": {
+                "type": "AzureBlobStorageLocation",
+                "container": "incoming",
+                "folderPath": {
+                  "value": "@pipeline().parameters.tenant_id",
+                  "type": "Expression"
+                }
+              }
+            }
+          }
+        ],
+        "outputs": [
+          {
+            "type": "Binary",
+            "linkedServiceName": {
+              "referenceName": "LS_ADLS_Gen2",
+              "type": "LinkedServiceReference"
+            },
+            "typeProperties": {
+              "location": {
+                "type": "AzureBlobFSLocation",
+                "fileSystem": "bronze",
+                "folderPath": {
+                  "value": "@concat(pipeline().parameters.tenant_id, '/', pipeline().parameters.run_date)",
+                  "type": "Expression"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "annotations": []
+  }
+}
