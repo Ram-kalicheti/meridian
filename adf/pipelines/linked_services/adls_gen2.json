@@ -1,0 +1,15 @@
+{
+  "name": "LS_ADLS_Gen2",
+  "properties": {
+    "type": "AzureBlobFS",
+    "description": "Medallion ADLS Gen2 storage — system managed identity avoids stored credentials",
+    "typeProperties": {
+      "url": "https://meridianstgrk1.dfs.core.windows.net/"
+    },
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    },
+    "annotations": []
+  }
+}

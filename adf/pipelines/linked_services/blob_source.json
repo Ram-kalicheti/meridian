@@ -1,0 +1,16 @@
+{
+  "name": "LS_BlobSource",
+  "properties": {
+    "type": "AzureBlob",
+    "description": "Tenant document drop zone — blob endpoint for ingestion source; external tenants use blob API, not DFS",
+    "typeProperties": {
+      "serviceEndpoint": "https://meridianstgrk1.blob.core.windows.net/",
+      "accountKind": "StorageV2"
+    },
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    },
+    "annotations": []
+  }
+}
