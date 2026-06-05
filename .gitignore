@@ -13,3 +13,4 @@ dist/
 venv/
 *.ipynb_checkpoints/
 .DS_Store
+.venv-spark/
