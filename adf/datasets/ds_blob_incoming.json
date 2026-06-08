@@ -1,0 +1,26 @@
+{
+  "name": "ds_blob_incoming",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "LS_BlobSource",
+      "type": "LinkedServiceReference"
+    },
+    "annotations": [],
+    "type": "Binary",
+    "typeProperties": {
+      "location": {
+        "type": "AzureBlobStorageLocation",
+        "container": "incoming",
+        "folderPath": {
+          "value": "@dataset().tenant_id",
+          "type": "Expression"
+        }
+      }
+    },
+    "parameters": {
+      "tenant_id": {
+        "type": "String"
+      }
+    }
+  }
+}

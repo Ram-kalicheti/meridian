@@ -1,0 +1,29 @@
+{
+  "name": "ds_adls_bronze",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "LS_ADLS_Gen2",
+      "type": "LinkedServiceReference"
+    },
+    "annotations": [],
+    "type": "Binary",
+    "typeProperties": {
+      "location": {
+        "type": "AzureBlobFSLocation",
+        "fileSystem": "bronze",
+        "folderPath": {
+          "value": "@concat(dataset().tenant_id, '/', dataset().batch_date)",
+          "type": "Expression"
+        }
+      }
+    },
+    "parameters": {
+      "tenant_id": {
+        "type": "String"
+      },
+      "batch_date": {
+        "type": "String"
+      }
+    }
+  }
+}
