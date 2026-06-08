@@ -1,0 +1,134 @@
+{
+  "name": "pl_bronze_to_silver",
+  "properties": {
+    "description": "triggers fabric notebook 1 via job scheduler api - parameterized by tenant_id and batch_date",
+    "activities": [
+      {
+        "name": "trigger_fabric_notebook",
+        "description": "calls fabric job scheduler rest api to execute bronze to silver notebook",
+        "type": "WebActivity",
+        "typeProperties": {
+          "url": "https://api.fabric.microsoft.com/v1/workspaces/00c7e81e-df3c-4d2f-97b7-a7ad2758b51d/items/779681b9-43fe-4b8b-970b-2756ed36af32/jobs/instances?jobType=RunNotebook",
+          "method": "POST",
+          "authentication": {
+            "type": "ServicePrincipal",
+            "tenant": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-tenant-id"
+            },
+            "servicePrincipalId": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-client-id"
+            },
+            "servicePrincipalKey": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-client-secret"
+            },
+            "resource": "https://api.fabric.microsoft.com"
+          },
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "value": "@concat('{\"executionData\":{\"parameters\":{\"tenant_id\":{\"value\":\"', pipeline().parameters.tenant_id, '\",\"type\":\"string\"},\"batch_date\":{\"value\":\"', pipeline().parameters.batch_date, '\",\"type\":\"string\"}}}}')",
+            "type": "Expression"
+          }
+        }
+      },
+      {
+        "name": "poll_job_status",
+        "description": "waits for notebook run to complete - polls location header from trigger response",
+        "type": "Until",
+        "dependsOn": [
+          {
+            "activity": "trigger_fabric_notebook",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@or(equals(activity('check_job_status').output.status, 'Completed'), equals(activity('check_job_status').output.status, 'Failed'))",
+            "type": "Expression"
+          },
+          "timeout": "0.01:00:00",
+          "activities": [
+            {
+              "name": "wait_before_poll",
+              "type": "Wait",
+              "typeProperties": {
+                "waitTimeInSeconds": 30
+              }
+            },
+            {
+              "name": "check_job_status",
+              "type": "WebActivity",
+              "dependsOn": [
+                {
+                  "activity": "wait_before_poll",
+                  "dependencyConditions": ["Succeeded"]
+                }
+              ],
+              "typeProperties": {
+                "url": {
+                  "value": "@activity('trigger_fabric_notebook').output.ADFWebActivityResponseHeaders['Location']",
+                  "type": "Expression"
+                },
+                "method": "GET",
+                "authentication": {
+                  "type": "ServicePrincipal",
+                  "tenant": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-tenant-id"
+                  },
+                  "servicePrincipalId": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-client-id"
+                  },
+                  "servicePrincipalKey": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-client-secret"
+                  },
+                  "resource": "https://api.fabric.microsoft.com"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "tenant_id": {
+        "type": "string",
+        "defaultValue": "acme"
+      },
+      "batch_date": {
+        "type": "string",
+        "defaultValue": "2026-06-09"
+      }
+    }
+  }
+}
