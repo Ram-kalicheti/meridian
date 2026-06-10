@@ -1,0 +1,45 @@
+{
+  "name": "meridian-docs",
+  "fields": [
+    { "name": "chunk_id",       "type": "Edm.String",  "key": true,  "filterable": true },
+    { "name": "doc_id",         "type": "Edm.String",  "filterable": true },
+    { "name": "tenant_id",      "type": "Edm.String",  "filterable": true, "facetable": true },
+    { "name": "doc_type",       "type": "Edm.String",  "filterable": true, "facetable": true },
+    { "name": "batch_date",     "type": "Edm.String",  "filterable": true },
+    { "name": "section_idx",    "type": "Edm.Int32",   "filterable": true },
+    { "name": "content_length", "type": "Edm.Int32",   "filterable": true },
+    { "name": "content",        "type": "Edm.String",  "searchable": true },
+    {
+      "name": "content_vector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "retrievable": false,
+      "vectorSearchDimensions": 1536,
+      "vectorSearchProfileName": "meridian-hnsw-profile"
+    },
+    { "name": "gold_enriched_at", "type": "Edm.DateTimeOffset", "filterable": true }
+  ],
+  "vectorSearch": {
+    "algorithms": [
+      {
+        "name": "meridian-hnsw",
+        "kind": "hnsw",
+        "hnswParameters": { "m": 4, "efConstruction": 400, "efSearch": 500, "metric": "cosine" }
+      }
+    ],
+    "profiles": [
+      { "name": "meridian-hnsw-profile", "algorithmConfigurationName": "meridian-hnsw" }
+    ]
+  },
+  "semantic": {
+    "configurations": [
+      {
+        "name": "meridian-semantic",
+        "prioritizedFields": {
+          "contentFields":  [{ "fieldName": "content" }],
+          "keywordsFields": [{ "fieldName": "doc_type" }, { "fieldName": "tenant_id" }]
+        }
+      }
+    ]
+  }
+}
