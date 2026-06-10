@@ -1,0 +1,216 @@
+{
+  "name": "pl_silver_to_gold",
+  "properties": {
+    "parameters": {
+      "tenant_id": {
+        "type": "string",
+        "defaultValue": "acme"
+      },
+      "batch_date": {
+        "type": "string",
+        "defaultValue": "2026-06-12"
+      }
+    },
+    "variables": {
+      "locationUrl": {
+        "type": "String"
+      },
+      "jobStatus": {
+        "type": "String"
+      }
+    },
+    "activities": [
+      {
+        "name": "TriggerSilverToGold",
+        "type": "WebActivity",
+        "typeProperties": {
+          "url": "https://api.fabric.microsoft.com/v1/workspaces/00c7e81e-df3c-4d2f-97b7-a7ad2758b51d/items/3d72af22-13df-4b36-a25d-be3dc203084c/jobs/instances?jobType=RunNotebook",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "value": "@concat('{\"executionData\":{\"parameters\":{\"tenant_id\":{\"value\":\"', pipeline().parameters.tenant_id, '\",\"type\":\"string\"},\"batch_date\":{\"value\":\"', pipeline().parameters.batch_date, '\",\"type\":\"string\"}}}}')",
+            "type": "Expression"
+          },
+          "authentication": {
+            "type": "ServicePrincipal",
+            "tenant": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-tenant-id"
+            },
+            "servicePrincipalId": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-client-id"
+            },
+            "servicePrincipalKey": {
+              "type": "AzureKeyVaultSecret",
+              "store": {
+                "referenceName": "LS_KeyVault",
+                "type": "LinkedServiceReference"
+              },
+              "secretName": "fabric-sp-client-secret"
+            },
+            "resource": "https://api.fabric.microsoft.com"
+          },
+          "httpRequestTimeout": "00:30:00"
+        }
+      },
+      {
+        "name": "SetLocationUrl",
+        "type": "SetVariable",
+        "dependsOn": [
+          {
+            "activity": "TriggerSilverToGold",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "variableName": "locationUrl",
+          "value": "@activity('TriggerSilverToGold').output.ADFWebActivityResponseHeaders['Location']"
+        }
+      },
+      {
+        "name": "PollJobStatus",
+        "type": "Until",
+        "dependsOn": [
+          {
+            "activity": "SetLocationUrl",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@or(equals(variables('jobStatus'), 'Completed'), equals(variables('jobStatus'), 'Failed'))",
+            "type": "Expression"
+          },
+          "timeout": "0.01:00:00",
+          "activities": [
+            {
+              "name": "WaitBeforePoll",
+              "type": "Wait",
+              "typeProperties": {
+                "waitTimeInSeconds": 30
+              }
+            },
+            {
+              "name": "GetJobStatus",
+              "type": "WebActivity",
+              "dependsOn": [
+                {
+                  "activity": "WaitBeforePoll",
+                  "dependencyConditions": ["Succeeded"]
+                }
+              ],
+              "typeProperties": {
+                "url": {
+                  "value": "@variables('locationUrl')",
+                  "type": "Expression"
+                },
+                "method": "GET",
+                "authentication": {
+                  "type": "ServicePrincipal",
+                  "tenant": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-tenant-id"
+                  },
+                  "servicePrincipalId": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-client-id"
+                  },
+                  "servicePrincipalKey": {
+                    "type": "AzureKeyVaultSecret",
+                    "store": {
+                      "referenceName": "LS_KeyVault",
+                      "type": "LinkedServiceReference"
+                    },
+                    "secretName": "fabric-sp-client-secret"
+                  },
+                  "resource": "https://api.fabric.microsoft.com"
+                }
+              }
+            },
+            {
+              "name": "SetJobStatus",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "GetJobStatus",
+                  "dependencyConditions": ["Succeeded"]
+                }
+              ],
+              "typeProperties": {
+                "variableName": "jobStatus",
+                "value": "@activity('GetJobStatus').output.status"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "CheckJobSuccess",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "PollJobStatus",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@equals(variables('jobStatus'), 'Failed')",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "FailSilverToGold",
+              "type": "Fail",
+              "typeProperties": {
+                "message": "@{concat('silver-to-gold notebook failed for tenant ', pipeline().parameters.tenant_id, ' batch ', pipeline().parameters.batch_date)}",
+                "errorCode": "NOTEBOOK_FAILED"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "UpdateGoldEnrichedAt",
+        "type": "Script",
+        "linkedServiceName": {
+          "referenceName": "LS_FabricWarehouse",
+          "type": "LinkedServiceReference"
+        },
+        "dependsOn": [
+          {
+            "activity": "CheckJobSuccess",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "scripts": [
+            {
+              "type": "Query",
+              "text": "@{concat('UPDATE dbo.fact_doc_chunks SET gold_enriched_at = CAST(GETUTCDATE() AS DATETIME2(6)) WHERE tenant_id = ''', pipeline().parameters.tenant_id, ''' AND batch_date = CAST(''', pipeline().parameters.batch_date, ''' AS DATE) AND dq_passed = 1 AND gold_enriched_at IS NULL')}"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
