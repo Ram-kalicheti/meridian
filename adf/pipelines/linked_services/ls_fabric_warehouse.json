@@ -1,0 +1,27 @@
+{
+  "name": "LS_FabricWarehouse",
+  "properties": {
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "connectionString": "Server=r47h77b27v5ulbmpqhof4cjonm-d3umoab434xu3f5xu6wsowfvdu.datawarehouse.fabric.microsoft.com,1433;Initial Catalog=meridian-warehouse;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+      "authenticationType": "ServicePrincipal",
+      "servicePrincipalId": {
+        "type": "AzureKeyVaultSecret",
+        "store": {
+          "referenceName": "LS_KeyVault",
+          "type": "LinkedServiceReference"
+        },
+        "secretName": "fabric-sp-client-id"
+      },
+      "servicePrincipalKey": {
+        "type": "AzureKeyVaultSecret",
+        "store": {
+          "referenceName": "LS_KeyVault",
+          "type": "LinkedServiceReference"
+        },
+        "secretName": "fabric-sp-client-secret"
+      },
+      "tenant": "fc7f3e8f-fd3a-457b-858f-81dc5e092e6b"
+    }
+  }
+}
