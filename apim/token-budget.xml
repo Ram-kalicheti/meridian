@@ -1,0 +1,32 @@
+<!--
+  Production APIM AI Gateway policy for per-tenant token budget enforcement.
+  llm-token-limit requires Developer tier or above, unavailable on Consumption.
+  Dev: TokenBudget class in api/router/token_budget.py handles per-tenant TPM.
+  See ADR 005.
+-->
+<policies>
+    <inbound>
+        <base />
+        <set-variable
+            name="tenantId"
+            value="@(context.Request.Headers.GetValueOrDefault(&quot;X-Tenant-ID&quot;, &quot;unknown&quot;))" />
+        <llm-token-limit
+            tokens-per-minute="100000"
+            counter-key="@((string)context.Variables[&quot;tenantId&quot;])"
+            estimate-prompt-tokens="true"
+            remaining-tokens-header-name="x-tokens-remaining"
+            remaining-tokens-variable-name="remainingTokens" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+        <set-header name="x-tenant-id" exists-action="override">
+            <value>@((string)context.Variables[&quot;tenantId&quot;])</value>
+        </set-header>
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>

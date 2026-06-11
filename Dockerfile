@@ -10,4 +10,7 @@ COPY extractor/ ./extractor/
 COPY quality/ ./quality/
 COPY telemetry/ ./telemetry/
 
+ENV PYTHONPATH=/app
+
+EXPOSE 8000
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
