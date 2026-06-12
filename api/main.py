@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import settings
 from api.routes.health import router as health_router
-from api.routes.query import router as query_router
+from api.routes.query import query_router
 
 
 @asynccontextmanager
