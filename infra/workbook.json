@@ -1,0 +1,45 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Meridian - Pipeline Observability"
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests\n| where timestamp > ago(24h)\n| summarize count(), avg(duration) by name\n| order by count_ desc",
+        "size": 0,
+        "title": "Request volume and avg latency by operation (24h)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components"
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "exceptions\n| where timestamp > ago(24h)\n| summarize count() by type, outerMessage\n| order by count_ desc",
+        "size": 0,
+        "title": "Exceptions by type (24h)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components"
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "dependencies\n| where timestamp > ago(24h)\n| where name == \"rag.query\"\n| extend tenant_id = tostring(customDimensions[\"tenant_id\"])\n| summarize count() by tenant_id\n| order by count_ desc",
+        "size": 0,
+        "title": "Query volume by tenant (24h)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components"
+      }
+    }
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
