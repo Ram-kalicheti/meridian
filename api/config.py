@@ -14,7 +14,7 @@ SEMANTIC_CACHE_THRESHOLD = 0.95
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-
+    applicationinsights_connection_string: str = ""
     openai_endpoint: str
     openai_key: str
     ai_search_endpoint: str

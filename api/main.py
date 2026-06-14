@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import redis.asyncio as aioredis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from telemetry.tracing import configure_tracing
 from api.config import settings
 from api.routes.health import router as health_router
 from api.routes.query import query_router
@@ -14,6 +14,7 @@ async def lifespan(app: FastAPI):
     app.state.redis = aioredis.from_url(
         settings.redis_url, encoding="utf-8", decode_responses=True
     )
+    configure_tracing()
     yield
     await app.state.redis.aclose()
 

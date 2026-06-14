@@ -32,11 +32,13 @@ from api.retrieval.assembler import assemble_context, build_rag_system_prompt
 from api.retrieval.reranker import rerank
 from api.retrieval.searcher import embed_query, hybrid_search
 from api.router.token_budget import get_token_budget, TokenBudget
+from telemetry.tracing import get_tracer
+
+_tracer = get_tracer(__name__)
 
 logger = logging.getLogger(__name__)
 query_router = APIRouter()
 
-# Pre-flight token reservation before the prompt is sized.
 _PREFLIGHT_TOKENS = 500
 _CACHE_TTL_SECONDS = 86_400
 _CACHE_KEY_PREFIX = "semcache"
@@ -51,19 +53,9 @@ def _get_settings() -> Settings:
     return _settings
 
 
-# ---------------------------------------------------------------------------
-# Pydantic request model
-# ---------------------------------------------------------------------------
-
-
 class QueryRequest(BaseModel):
     query: str
     top_k: int = 5
-
-
-# ---------------------------------------------------------------------------
-# Semantic cache helpers
-# ---------------------------------------------------------------------------
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -118,11 +110,6 @@ async def _cache_write(
         logger.info("cache write: key=%s", key)
     except Exception as exc:
         logger.warning("cache_write failed: %s", exc)
-
-
-# ---------------------------------------------------------------------------
-# SSE helpers
-# ---------------------------------------------------------------------------
 
 
 def _sse(data: dict) -> str:
@@ -180,11 +167,6 @@ async def _stream_openai(
     await _cache_write(redis, tenant_id, embedding, response_text)
 
 
-# ---------------------------------------------------------------------------
-# Route
-# ---------------------------------------------------------------------------
-
-
 @query_router.post("/query")
 async def post_query(
     body: QueryRequest,
@@ -226,27 +208,31 @@ async def post_query(
             media_type="text/event-stream",
         )
 
-    # 4. Hybrid search.
-    hits = await hybrid_search(
-        query=body.query,
-        tenant_id=tenant_id,
-        top_k=body.top_k,
-    )
+    # 4. Hybrid search + rerank + context assembly  (traced as a single retrieval span).
+    with _tracer.start_as_current_span("rag.query") as span:
+        span.set_attribute("tenant_id", tenant_id)
+        span.set_attribute("query.length", len(body.query))
 
-    if not hits:
-        async def _no_results() -> AsyncGenerator[str, None]:
-            yield _sse({"type": "sources", "sources": []})
-            yield _sse({"type": "token", "content": "No relevant documents found for your query."})
-            yield _sse({"type": "done", "cached": False})
+        hits = await hybrid_search(
+            query=body.query,
+            tenant_id=tenant_id,
+            top_k=body.top_k,
+        )
 
-        return StreamingResponse(_no_results(), media_type="text/event-stream")
+        if not hits:
+            async def _no_results() -> AsyncGenerator[str, None]:
+                yield _sse({"type": "sources", "sources": []})
+                yield _sse({"type": "token", "content": "No relevant documents found for your query."})
+                yield _sse({"type": "done", "cached": False})
 
-    # 5. Rerank.
-    reranked = await rerank(query=body.query, hits=hits)
+            return StreamingResponse(_no_results(), media_type="text/event-stream")
 
-    # 6. Assemble context.
-    context_str, sources = assemble_context(reranked)
-    system_prompt = build_rag_system_prompt(context_str)
+        # 5. Rerank.
+        reranked = await rerank(query=body.query, hits=hits)
+
+        # 6. Assemble context.
+        context_str, sources = assemble_context(reranked)
+        system_prompt = build_rag_system_prompt(context_str)
 
     # 7. Stream via Azure OpenAI + async cache write.
     return StreamingResponse(
