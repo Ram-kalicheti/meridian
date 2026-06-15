@@ -68,7 +68,7 @@ def _cosine(a: list[float], b: list[float]) -> float:
 
 
 async def _cache_lookup(
-    redis: aioredis.Redis,
+    redis: aioredis.Redis | None,
     tenant_id: str,
     embedding: list[float],
 ) -> str | None:
@@ -76,6 +76,8 @@ async def _cache_lookup(
     Scan Redis for a semantically similar cached query for this tenant.
     Returns the cached response string if cosine similarity >= threshold, else None.
     """
+    if redis is None:
+        return None
     pattern = f"{_CACHE_KEY_PREFIX}:{tenant_id}:*"
     try:
         keys = await redis.keys(pattern)
@@ -97,12 +99,14 @@ async def _cache_lookup(
 
 
 async def _cache_write(
-    redis: aioredis.Redis,
+    redis: aioredis.Redis | None,
     tenant_id: str,
     embedding: list[float],
     response: str,
 ) -> None:
     """Write a new entry to the semantic cache with a 24-hour TTL."""
+    if redis is None:
+        return
     key = f"{_CACHE_KEY_PREFIX}:{tenant_id}:{uuid.uuid4().hex}"
     payload = json.dumps({"embedding": embedding, "response": response})
     try:

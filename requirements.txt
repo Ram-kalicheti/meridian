@@ -17,9 +17,9 @@ ragas>=0.2
 datasets>=3.1
 
 # observability
-opentelemetry-sdk>=1.27
-opentelemetry-exporter-otlp>=1.27
-azure-monitor-opentelemetry>=1.6
+opentelemetry-sdk==1.29.0
+opentelemetry-exporter-otlp==1.29.0
+azure-monitor-opentelemetry==1.6.4
 
 # utils
 pydantic>=2.9
