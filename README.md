@@ -46,8 +46,9 @@ The quality gate runs RAGAS context_precision via direct Azure OpenAI calls (rag
 
 ![Power BI Doc Coverage](docs/screenshots/14_powerbi_doc_coverage.png)
 
-![Fabric Workspace]
-(docs/screenshots/15_fabric_workspace.png)
+![Fabric Warehouse](docs/screenshots/16_fabric_warehouse_data.png)
+
+![Fabric Workspace](docs/screenshots/15_fabric_workspace.png)
 
 ## What I learned the hard way
 
@@ -71,12 +72,12 @@ succeed but fails silently on every operation. Always use rediss:// for Azure.
 Azure AI Search VectorizedQuery returns 0 results silently if the field name
 is wrong. The meridian-docs index uses content_vector - not the generic name
 "embedding". No error is raised. Always verify field names with:
-az search index show --name meridian-docs --service-name <your-service>
+az search index show --name meridian-docs --service-name <your-search-service>
 
 ### 4. Docker --env-file requires absolute path on Windows
 
 docker run --env-file ~/meridian/.env starts without error but env vars are
-silently missing. Fix: use C:/Users/USER/meridian/.env (absolute Windows path).
+silently missing. Fix: use an absolute Windows path.
 Tilde expansion does not work for Docker --env-file on Windows.
 
 ## Architecture decisions
@@ -96,7 +97,7 @@ Six ADRs document the non-obvious choices:
 cp .env.sample .env
 # fill in Key Vault secret values
 docker build -t meridian-api .
-docker run --env-file C:/Users/USER/meridian/.env -p 8000:8000 meridian-api
+docker run --env-file /absolute/path/to/meridian/.env -p 8000:8000 meridian-api
 curl http://localhost:8000/health
 ```
 
