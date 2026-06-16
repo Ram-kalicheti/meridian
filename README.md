@@ -2,10 +2,6 @@
 
 Multi-tenant AI document intelligence platform built on Microsoft Fabric OneLake, Azure AI Search, and FastAPI.
 
-![ADF Pipelines](docs/screenshots/01_adf_blobtobronze_succeeded.png)
-
----
-
 At KPMG I maintained 12 separate point-to-point document integrations for 8 enterprise clients. Every new client added another integration. There was no shared query layer, no unified audit trail, and no way to ask a question across tenants without touching each system individually. Meridian is what I would have built instead.
 
 ## Stack
@@ -30,10 +26,6 @@ OpenTelemetry traces every query as a `rag.query` span with `tenant_id` attached
 
 The quality gate runs RAGAS context_precision via direct Azure OpenAI calls (ragas.evaluate() is bypassed - see bug 1 below). Anything below 0.85 blocks the merge. Final score on the evaluation set: 0.92.
 
-![RAGAS Evaluation](docs/screenshots/11_ragas_eval_pass.png)
-
-![App Insights](docs/screenshots/10_app_insights_rag_query.png)
-
 ## Results
 
 - 102 document chunks ingested across 3 tenants (acme, contoso, fabrikam)
@@ -41,6 +33,12 @@ The quality gate runs RAGAS context_precision via direct Azure OpenAI calls (rag
 - Semantic cache hit rate: 30%+ at cosine 0.95
 - rag.query spans visible in App Insights with tenant_id attribution
 - Power BI DirectLake dashboard: Ingestion Quality and Doc Coverage pages live
+
+![ADF Pipelines](docs/screenshots/01_adf_blobtobronze_succeeded.png)
+
+![RAGAS Evaluation](docs/screenshots/11_ragas_eval_pass.png)
+
+![App Insights](docs/screenshots/10_app_insights_rag_query.png)
 
 ![Power BI Dashboard](docs/screenshots/13_powerbi_ingestion_quality.png)
 
@@ -77,7 +75,7 @@ az search index show --name meridian-docs --service-name <your-search-service>
 ### 4. Docker --env-file requires absolute path on Windows
 
 docker run --env-file ~/meridian/.env starts without error but env vars are
-silently missing. Fix: use an absolute Windows path.
+silently missing. Fix: use an absolute path to the .env file.
 Tilde expansion does not work for Docker --env-file on Windows.
 
 ## Architecture decisions
