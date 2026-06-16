@@ -1,62 +1,52 @@
 [
   {
-    "id": "gs-001",
-    "tenant_id": "acme",
-    "question": "What is the data retention policy for financial records?",
-    "ground_truth": "Financial records must be retained for a minimum of seven years in accordance with regulatory requirements. Records include invoices, receipts, bank statements, and audit trails. Digital copies are acceptable provided they meet integrity and authenticity standards."
-  },
-  {
-    "id": "gs-002",
-    "tenant_id": "acme",
-    "question": "What are the approval thresholds for capital expenditure requests?",
-    "ground_truth": "Capital expenditure requests require department manager approval up to $10,000, director approval up to $50,000, and CFO approval above $50,000. Requests exceeding $250,000 require board committee review. All approvals must be documented in the procurement system before purchase orders are raised."
-  },
-  {
-    "id": "gs-003",
-    "tenant_id": "acme",
-    "question": "How should personally identifiable information be handled in project documentation?",
-    "ground_truth": "Personally identifiable information must be redacted from project documentation before filing or sharing. Names, contact details, national identification numbers, and financial account numbers are classified as PII. Project managers are responsible for ensuring redaction is completed prior to document submission."
-  },
-  {
-    "id": "gs-004",
-    "tenant_id": "contoso",
-    "question": "What is the escalation procedure when a critical system incident exceeds four hours?",
-    "ground_truth": "When a critical system incident exceeds four hours without resolution, the on-call engineer must escalate to the senior engineering manager and notify the customer success team. An incident bridge call must be opened with stakeholders. A preliminary root cause summary is required within 24 hours and a full post-incident review within five business days."
-  },
-  {
-    "id": "gs-005",
-    "tenant_id": "contoso",
-    "question": "What security controls are required for remote access to production environments?",
-    "ground_truth": "Remote access to production environments requires multi-factor authentication, a VPN connection to the corporate network, and use of a company-managed device. Access sessions must be logged and reviewed weekly. Privileged access must be time-bounded to a maximum of eight hours per session and requires a separate approval ticket."
-  },
-  {
-    "id": "gs-006",
-    "tenant_id": "contoso",
-    "question": "How are software dependency vulnerabilities tracked and remediated?",
-    "ground_truth": "Software dependency vulnerabilities are tracked using automated scanning on every pull request and weekly scheduled scans of all production images. Critical severity vulnerabilities must be remediated within 48 hours. High severity vulnerabilities must be remediated within 14 days. All remediation actions are logged in the security register with the assigned engineer and resolution date."
-  },
-  {
-    "id": "gs-007",
     "tenant_id": "fabrikam",
-    "question": "What is the process for onboarding a new vendor to the supplier portal?",
-    "ground_truth": "New vendor onboarding requires completion of the supplier registration form, submission of proof of business registration, and passing a due diligence check conducted by the procurement team. Tax identification and banking details must be verified before the first payment is processed. Onboarding typically takes five to ten business days. Approved vendors are assigned a supplier code and added to the approved supplier list."
+    "question": "What percentage of participants recalled using their Google Account to sign in to third-party apps?",
+    "ground_truth": "Ninety percent of participants recalled using their Google Account to sign in to third-party apps."
   },
   {
-    "id": "gs-008",
     "tenant_id": "fabrikam",
-    "question": "What are the quality inspection checkpoints for incoming raw materials?",
-    "ground_truth": "Incoming raw materials must pass three quality checkpoints: dimensional verification against the purchase order specification, material certification review against the approved supplier certificate of conformance, and a random sample visual inspection. Materials failing any checkpoint are quarantined and a non-conformance report is raised. The supplier is notified within 24 hours of a non-conformance finding."
+    "question": "What privacy concerns did participants express about SSO services?",
+    "ground_truth": "Participants expressed concerns about information sharing through SSO services and wariness about granting access to third-party apps."
   },
   {
-    "id": "gs-009",
     "tenant_id": "fabrikam",
-    "question": "How should change requests to approved production processes be documented?",
-    "ground_truth": "Change requests to approved production processes must be submitted through the change control system with a description of the proposed change, the business justification, risk assessment, and a rollback plan. Changes are reviewed by the process engineering lead and quality assurance manager. Approved changes are communicated to affected teams at least 48 hours before implementation and are recorded in the process change log."
+    "question": "How many surveys were used in the research methodology?",
+    "ground_truth": "The research involved two surveys. The first focused on prior experiences with third-party apps and SSO, while the second used a browser extension to gather data on current authorizations."
   },
   {
-    "id": "gs-010",
-    "tenant_id": "acme",
-    "question": "What are the requirements for a valid contract before work can commence?",
-    "ground_truth": "A valid contract must include a signed statement of work, agreed pricing schedule, payment terms, intellectual property ownership clause, and a defined liability cap. Contracts must be reviewed by the legal team for engagements exceeding $25,000. Work may not commence until the contract is countersigned by both parties and a purchase order number has been issued. Contract originals are filed in the document management system within three business days of execution."
+    "tenant_id": "fabrikam",
+    "question": "What issues related to app permissions did the study highlight?",
+    "ground_truth": "The study highlighted issues related to overprivileged apps and the need for better permission management practices."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What suggestions did participants provide for improving API access control?",
+    "ground_truth": "Participants suggested improving transparency and control over API access to their Google account and enhanced features on the Apps with access to your account page."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What did the second survey in the study use to gather data?",
+    "ground_truth": "The second survey utilized a browser extension to gather data on current authorizations on participants Google accounts."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What did over half of research participants recall about third-party app access?",
+    "ground_truth": "Over half of participants recalled granting a third-party app access to their Google Account."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What does the research suggest about user engagement with third-party apps?",
+    "ground_truth": "The findings suggest a significant level of user engagement with third-party apps while highlighting concerns about privacy and the need for better management of app permissions."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What API does the study focus on regarding third-party app permissions?",
+    "ground_truth": "The study explored permissions requested by third-party apps that integrate with Google API."
+  },
+  {
+    "tenant_id": "fabrikam",
+    "question": "What is the main topic of the research document?",
+    "ground_truth": "The research focuses on user awareness and management of third-party app access to Google Accounts through Single Sign-On services."
   }
 ]

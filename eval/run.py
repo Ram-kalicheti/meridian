@@ -36,6 +36,7 @@ RETRY_ATTEMPTS = 2
 RETRY_SLEEP = 3
 CHAT_DEPLOYMENT = "gpt-4o-mini"
 OPENAI_API_VERSION = "2024-02-01"
+AI_SEARCH_INDEX = "meridian-docs"
 
 
 def _get_openai_client() -> AzureOpenAI:
@@ -46,9 +47,30 @@ def _get_openai_client() -> AzureOpenAI:
     )
 
 
+def _fetch_chunk_content(chunk_ids: list[str]) -> list[str]:
+    # fetch actual chunk text from AI Search so LLM can judge relevance
+    search_endpoint = os.environ.get("AI_SEARCH_ENDPOINT", "")
+    search_key = os.environ.get("AI_SEARCH_KEY", "")
+    if not search_endpoint or not search_key:
+        return chunk_ids
+    contents = []
+    for chunk_id in chunk_ids:
+        url = f"{search_endpoint}/indexes/{AI_SEARCH_INDEX}/docs/{chunk_id}?api-version=2024-07-01"
+        try:
+            resp = httpx.get(url, headers={"api-key": search_key}, timeout=10)
+            if resp.status_code == 200:
+                doc = resp.json()
+                content = doc.get("content", "")
+                if content:
+                    contents.append(content)
+        except Exception:
+            continue
+    return contents if contents else chunk_ids
+
+
 def _parse_sse_stream(raw: str) -> tuple[str, list[str]]:
     answer_parts: list[str] = []
-    sources: list[str] = []
+    chunk_ids: list[str] = []
 
     for line in raw.splitlines():
         line = line.strip()
@@ -66,11 +88,11 @@ def _parse_sse_stream(raw: str) -> tuple[str, list[str]]:
             answer_parts.append(obj["content"])
         if obj.get("type") == "sources" and obj.get("sources"):
             for src in obj["sources"]:
-                content = src.get("content") or src.get("text") or str(src)
-                if content and content not in sources:
-                    sources.append(content)
+                chunk_id = src.get("chunk_id") or str(src)
+                if chunk_id and chunk_id not in chunk_ids:
+                    chunk_ids.append(chunk_id)
 
-    return "".join(answer_parts).strip(), sources
+    return "".join(answer_parts).strip(), chunk_ids
 
 
 def _query(client: httpx.Client, endpoint: str, tenant_id: str, question: str) -> tuple[str, list[str]]:
@@ -88,7 +110,9 @@ def _query(client: httpx.Client, endpoint: str, tenant_id: str, question: str) -
             with client.stream("POST", url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT) as resp:
                 resp.raise_for_status()
                 raw = resp.read().decode("utf-8")
-            return _parse_sse_stream(raw)
+            answer, chunk_ids = _parse_sse_stream(raw)
+            contents = _fetch_chunk_content(chunk_ids) if chunk_ids else []
+            return answer, contents
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
             print(f"  [attempt {attempt}/{RETRY_ATTEMPTS}] error: {exc}", file=sys.stderr)
