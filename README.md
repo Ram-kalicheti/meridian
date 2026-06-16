@@ -12,6 +12,8 @@ At KPMG I maintained 12 separate point-to-point document integrations for 8 ente
 
 Azure Data Factory - Microsoft Fabric - Azure Document Intelligence - Azure AI Search - Azure OpenAI - FastAPI - Redis - Azure APIM - Azure Container Apps - Azure Application Insights - OpenTelemetry - Power BI DirectLake
 
+![Architecture](docs/screenshots/architecture.png)
+
 ## Architecture
 
 Documents move through three immutable zones on ADLS Gen2, orchestrated by ADF.
@@ -41,6 +43,11 @@ The quality gate runs RAGAS context_precision via direct Azure OpenAI calls (rag
 - Power BI DirectLake dashboard: Ingestion Quality and Doc Coverage pages live
 
 ![Power BI Dashboard](docs/screenshots/13_powerbi_ingestion_quality.png)
+
+![Power BI Doc Coverage](docs/screenshots/14_powerbi_doc_coverage.png)
+
+![Fabric Workspace]
+(docs/screenshots/15_fabric_workspace.png)
 
 ## What I learned the hard way
 
