@@ -122,6 +122,8 @@ def _sse(data: dict) -> str:
 
 async def _stream_cached(response_text: str) -> AsyncGenerator[str, None]:
     """Re-stream a cache hit as SSE chunks (word-by-word for UX parity)."""
+    # emit empty sources so clients and eval always receive a sources event
+    yield _sse({"type": "sources", "sources": []})
     words = response_text.split(" ")
     for i, word in enumerate(words):
         chunk = word if i == 0 else " " + word
